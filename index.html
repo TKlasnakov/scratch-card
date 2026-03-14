@@ -68,6 +68,7 @@
       inset: 0;
       cursor: crosshair;
       border-radius: 16px;
+      touch-action: none;
     }
   </style>
 </head>
@@ -110,6 +111,7 @@
     ctx.globalCompositeOperation = 'destination-out';
 
     let isScratching = false;
+    let lastPos = null;
 
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
@@ -123,22 +125,35 @@
     function scratch(e) {
       if (!isScratching) return;
       e.preventDefault();
-      const { x, y } = getPos(e);
+      const pos = getPos(e);
+
+      ctx.lineWidth = 90;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
       ctx.beginPath();
-      ctx.arc(x, y, 28, 0, Math.PI * 2);
-      ctx.fill();
+      if (lastPos) {
+        ctx.moveTo(lastPos.x, lastPos.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      } else {
+        ctx.arc(pos.x, pos.y, 45, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      lastPos = pos;
     }
 
     // Mouse events
-    canvas.addEventListener('mousedown', (e) => { isScratching = true; scratch(e); });
+    canvas.addEventListener('mousedown', (e) => { isScratching = true; lastPos = null; scratch(e); });
     canvas.addEventListener('mousemove', scratch);
-    canvas.addEventListener('mouseup', () => { isScratching = false; });
-    canvas.addEventListener('mouseleave', () => { isScratching = false; });
+    canvas.addEventListener('mouseup', () => { isScratching = false; lastPos = null; });
+    canvas.addEventListener('mouseleave', () => { isScratching = false; lastPos = null; });
 
     // Touch events
-    canvas.addEventListener('touchstart', (e) => { isScratching = true; scratch(e); }, { passive: false });
+    canvas.addEventListener('touchstart', (e) => { isScratching = true; lastPos = null; scratch(e); }, { passive: false });
     canvas.addEventListener('touchmove', scratch, { passive: false });
-    canvas.addEventListener('touchend', () => { isScratching = false; });
+    canvas.addEventListener('touchend', () => { isScratching = false; lastPos = null; });
   </script>
 
 </body>
