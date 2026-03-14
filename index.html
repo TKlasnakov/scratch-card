@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scratch Card</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .card {
+      position: relative;
+      width: 320px;
+      height: 200px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      user-select: none;
+    }
+
+    /* Bottom layer — the revealed content */
+    .card-reveal {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #0f3460, #16213e);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .card-reveal .label {
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #a0aec0;
+    }
+
+    .card-reveal .prize {
+      font-size: 42px;
+      font-weight: 800;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    .card-reveal .sublabel {
+      font-size: 12px;
+      color: #718096;
+      letter-spacing: 1px;
+    }
+
+    /* Top layer — the scratch canvas */
+    canvas {
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+      border-radius: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="card-reveal">
+      <span class="label">You won</span>
+      <span class="prize">$250</span>
+      <span class="sublabel">Scratch to reveal</span>
+    </div>
+    <canvas id="scratchCanvas"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('scratchCanvas');
+    const ctx = canvas.getContext('2d');
+    const card = canvas.closest('.card');
+
+    // Match canvas size to card
+    canvas.width = card.offsetWidth;
+    canvas.height = card.offsetHeight;
+
+    // Draw the scratch surface
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#b8860b');
+    gradient.addColorStop(0.5, '#ffd700');
+    gradient.addColorStop(1, '#b8860b');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // "Scratch here" hint text
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.font = 'bold 18px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✦ SCRATCH HERE ✦', canvas.width / 2, canvas.height / 2);
+
+    // Erase pixels using destination-out
+    ctx.globalCompositeOperation = 'destination-out';
+
+    let isScratching = false;
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return {
+        x: src.clientX - rect.left,
+        y: src.clientY - rect.top,
+      };
+    }
+
+    function scratch(e) {
+      if (!isScratching) return;
+      e.preventDefault();
+      const { x, y } = getPos(e);
+      ctx.beginPath();
+      ctx.arc(x, y, 28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', (e) => { isScratching = true; scratch(e); });
+    canvas.addEventListener('mousemove', scratch);
+    canvas.addEventListener('mouseup', () => { isScratching = false; });
+    canvas.addEventListener('mouseleave', () => { isScratching = false; });
+
+    // Touch events
+    canvas.addEventListener('touchstart', (e) => { isScratching = true; scratch(e); }, { passive: false });
+    canvas.addEventListener('touchmove', scratch, { passive: false });
+    canvas.addEventListener('touchend', () => { isScratching = false; });
+  </script>
+
+</body>
+</html>
