@@ -23,7 +23,7 @@
     .card {
       position: relative;
       width: 320px;
-      height: 200px;
+      height: 260px;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -39,7 +39,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
+      padding: 24px;
+      text-align: center;
     }
 
     .card-reveal .label {
@@ -50,10 +52,16 @@
     }
 
     .card-reveal .prize {
-      font-size: 22px;
       font-weight: 800;
       color: #ffd700;
       text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      line-height: 1.35;
+    }
+
+    .card-reveal .author {
+      font-size: 12px;
+      font-style: italic;
+      color: #a0aec0;
     }
 
     .card-reveal .sublabel {
@@ -77,13 +85,31 @@
   <div class="card">
     <div class="card-reveal">
       <span class="label">Мисъл на деня</span>
-      <span class="prize">Всеки ден е нов шанс.</span>
+      <span class="prize" id="prizeText"></span>
+      <span class="author" id="authorText"></span>
       <span class="sublabel">Надраскай, за да разкриеш</span>
     </div>
     <canvas id="scratchCanvas"></canvas>
   </div>
 
+  <script src="quotes.js"></script>
   <script>
+    // Pick a random quote and split off a trailing " — Source" attribution, if present
+    const rawQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    const dashSplit = rawQuote.split(' — ');
+    const quoteText = dashSplit[0];
+    const authorText = dashSplit.length > 1 ? '— ' + dashSplit.slice(1).join(' — ') : '';
+
+    const prizeEl = document.getElementById('prizeText');
+    prizeEl.textContent = quoteText;
+    prizeEl.style.fontSize =
+      quoteText.length > 140 ? '13px' :
+      quoteText.length > 100 ? '15px' :
+      quoteText.length > 60  ? '17px' :
+      quoteText.length > 30  ? '19px' : '22px';
+
+    document.getElementById('authorText').textContent = authorText;
+
     const canvas = document.getElementById('scratchCanvas');
     const ctx = canvas.getContext('2d');
     const card = canvas.closest('.card');
