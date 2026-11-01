@@ -134,25 +134,23 @@
     canvas.width = card.offsetWidth;
     canvas.height = card.offsetHeight;
 
-    // Draw the copper scratch surface
+    // Draw the copper scratch surface — diamond gradient #D48252 → #874D2C
     const w = canvas.width;
     const h = canvas.height;
-    const base = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.7);
-    base.addColorStop(0, '#e0a07a');
-    base.addColorStop(0.55, '#a8653f');
-    base.addColorStop(1, '#7a4127');
-    ctx.fillStyle = base;
-    ctx.fillRect(0, 0, w, h);
-
-    // Diagonal metallic sheen
-    [[0, 0, w, h], [w, 0, 0, h]].forEach(([x0, y0, x1, y1]) => {
-      const sheen = ctx.createLinearGradient(x0, y0, x1, y1);
-      sheen.addColorStop(0, 'rgba(255,220,190,0)');
-      sheen.addColorStop(0.5, 'rgba(255,220,190,0.18)');
-      sheen.addColorStop(1, 'rgba(255,220,190,0)');
-      ctx.fillStyle = sheen;
-      ctx.fillRect(0, 0, w, h);
-    });
+    const from = [0xd4, 0x82, 0x52];
+    const to = [0x87, 0x4d, 0x2c];
+    const surface = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const t = Math.min(1, Math.abs(x - w / 2) / (w / 2) + Math.abs(y - h / 2) / (h / 2));
+        const i = (y * w + x) * 4;
+        surface.data[i] = from[0] + (to[0] - from[0]) * t;
+        surface.data[i + 1] = from[1] + (to[1] - from[1]) * t;
+        surface.data[i + 2] = from[2] + (to[2] - from[2]) * t;
+        surface.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(surface, 0, 0);
 
     // Swipe-hand hint icon
     const hand = new Image();
