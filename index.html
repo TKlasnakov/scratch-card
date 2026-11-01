@@ -23,6 +23,16 @@
       font-family: 'Montserrat', 'Segoe UI', sans-serif;
     }
 
+    /* Keep content hidden until fonts, logo and scratch layer are ready,
+       then fade it in together to avoid a flash on load */
+    body > * {
+      transition: opacity 0.3s ease;
+    }
+
+    body:not(.ready) > * {
+      opacity: 0;
+    }
+
     .logo {
       width: 180px;
       height: auto;
@@ -94,7 +104,7 @@
 </head>
 <body>
 
-  <img class="logo" src="logo.svg" alt="Асарел-Медет АД" />
+  <img class="logo" src="logo.svg" width="251" height="101" alt="Асарел-Медет АД" />
 
   <h1 class="headline">Какво предстои днес?</h1>
 
@@ -154,15 +164,26 @@
 
     // Swipe-hand hint icon
     const hand = new Image();
-    hand.onload = () => {
-      const iw = 72;
-      const ih = iw * hand.naturalHeight / hand.naturalWidth;
-      ctx.save();
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.drawImage(hand, (w - iw) / 2, (h - ih) / 2, iw, ih);
-      ctx.restore();
-    };
+    const handReady = new Promise((resolve) => {
+      hand.onload = () => {
+        const iw = 72;
+        const ih = iw * hand.naturalHeight / hand.naturalWidth;
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.drawImage(hand, (w - iw) / 2, (h - ih) / 2, iw, ih);
+        ctx.restore();
+        resolve();
+      };
+      hand.onerror = resolve;
+    });
     hand.src = 'hand.svg';
+
+    // Reveal the page once everything is painted (or after 2s at most)
+    const logoReady = document.querySelector('.logo').decode().catch(() => {});
+    Promise.race([
+      Promise.all([document.fonts.ready, logoReady, handReady]),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]).then(() => document.body.classList.add('ready'));
 
     // Erase pixels using destination-out
     ctx.globalCompositeOperation = 'destination-out';
